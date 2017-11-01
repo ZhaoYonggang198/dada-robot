@@ -2,12 +2,10 @@ import requests
 import json
 
 class CurrencyUnavailableError(Exception):
-    # def __init__(self):
-    #     self.value = value
     def __str__(self):
-        return repr('currency rate unavailable')
+        return repr('currency exchange rate unavailable')
 
-class Http_proxy:
+class HttpProxy:
     def __init__(self, connect_timeout = 5):
         self._connect_timeout = 5
         self._session = requests.Session()
@@ -16,13 +14,13 @@ class Http_proxy:
         try:
             response = self._session.get(uri, timeout = self._connect_timeout);
         except (requests.exceptions.Timeout, requests.exceptions.ConnectionError, requests.exceptions.TooManyRedirects):
-            raise CurrencyUnavailableErroe()
+            raise CurrencyUnavailableError()
         else:
             return response
 
-class Yahoo_provider:
+class YahooProvider:
     def __init__(self, currency_from, currency_to, connect_timeout = 5):
-        self._proxy = Http_proxy(connect_timeout)
+        self._proxy = HttpProxy(connect_timeout)
         self._currency_from = currency_from
         self._currency_to = currency_to
     
@@ -34,15 +32,13 @@ class Yahoo_provider:
     def get_exchange_rate(self):
         try:
             response = self._proxy.get(self.__build_uri__())
-            rate = response.json()['query']['results']['rate']['Rate']
-        except (ValueError, KeyError, TypeError, CurrencyUnavailableError):
+            return response.json()['query']['results']['rate']['Rate']
+        except (ValueError, KeyError, TypeError):
             raise CurrencyUnavailableError()
-        else:
-            return response
 
-class Fixer_provider:
+class FixerProvider:
     def __init__(self, currency_from, currency_to, connect_timeout = 5):
-        self._proxy = Http_proxy(connect_timeout)
+        self._proxy = HttpProxy(connect_timeout)
         self._currency_from = currency_from
         self._currency_to = currency_to
     
@@ -53,12 +49,21 @@ class Fixer_provider:
     def get_exchange_rate(self):
         try:
             response = self._proxy.get(self.__build_uri__())
-            rate = response.json()["rates"][self._currency_to]
-        except (ValueError, KeyError, TypeError, CurrencyUnavailableError):
+            return response.json()["rates"][self._currency_to]
+        except (ValueError, KeyError, TypeError):
             raise CurrencyUnavailableError()
-        else:
-            return rate
+
+def convert_currency_using_fixer(currency_from, currency_to, amount, connect_timeout = 5):
+    converter = FixerProvider(currency_from, currency_to, connect_timeout)
+    return amount * converter.get_exchange_rate()
+
+def convert_currency_using_yahoo(currency_from, currency_to, amount, connect_timeout = 5):
+    converter = YahooProvider(currency_from, currency_to, connect_timeout)
+    return amount * converter.get_exchange_rate()
 
 def convert_currency(currency_from, currency_to, amount, connect_timeout = 5):
-    converter = fixer_provider(currency_from, currency_to, connect_timeout)
-    return amount * converter.get_exchange_rate()
+    try:
+        return convert_currency_using_fixer(currency_from, currency_to, amount, connect_timeout)
+    except CurrencyUnavailableError:
+        return convert_currency_using_yahoo(currency_from, currency_to, amount, connect_timeout)
+
