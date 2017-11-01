@@ -18,8 +18,7 @@ class Http_proxy:
         except (requests.exceptions.Timeout, requests.exceptions.ConnectionError, requests.exceptions.TooManyRedirects):
             raise CurrencyUnavailableErroe()
         else:
-            # return response
-            raise CurrencyUnavailableError()
+            return response
 
 class Yahoo_provider:
     def __init__(self, currency_from, currency_to, connect_timeout = 5):

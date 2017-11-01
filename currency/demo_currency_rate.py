@@ -1,5 +1,5 @@
 from datetime import datetime
-import currency_exchange_rate  as currency
+import  currency
 
 def __get_million_seconds_elapsed__(start, end):
     delta = end - start
@@ -15,8 +15,10 @@ def __get_respond_time__(converter, count):
 
 if __name__ == '__main__': 
     try:
-        __get_respond_time__(currency.Fixer_provider("USD", "EUR", 5), 1)  
-        __get_respond_time__(currency.Yahoo_provider("USD", "EUR", 5), 1)
+        print "get currency from fixer"
+        __get_respond_time__(currency.Fixer_provider("USD", "EUR", 5), 10)  
+        print "get currency from yahoo"
+        __get_respond_time__(currency.Yahoo_provider("USD", "EUR", 5), 10)
     except currency.CurrencyUnavailableError:
         print "currency rate unavailable"
     except Exception:
