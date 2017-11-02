@@ -7,3 +7,4 @@
 ### share same standard defination between countries
 ### helper function and yaml definations
 ### unit test
+### dump all standards of the particular item
