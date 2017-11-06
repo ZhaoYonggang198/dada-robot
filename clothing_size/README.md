@@ -1,10 +1,10 @@
 # clothing size convertor
 
-## TODO list
-### configuration validation
-### support define standards in different yaml files
-### both key and value should be case insensitive
-### share same standard defination between countries
-### helper function and yaml definations
-### unit test
-### dump all standards of the particular item
+## manual
+convert_size(category, from_standard, to_standard, size)
+example:
+convert_size("men shoes", "China", "Italy", "38")
+convert_size("men,shoes", "China", "Italy", "38")
+convert_size("men;shoes", "China", "Italy", "38")
+
+category is a list of tags with space, comma, semi-colon as delimiters
