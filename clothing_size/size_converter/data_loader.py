@@ -1,11 +1,29 @@
-import pyexcel
+﻿import csv
+import codecs
 import re
+import os
+from converter import add_size_standards
 
-CATEGORY_DELIMITERS = '/| |;|,'
-def parse_tags(name):
-    return re.split(CATEGORY_DELIMITERS, name)
+FILE_NAME_DELIMITERS = '_|-'
 
-def get_size_dictionary(name):
-    book = pyexcel.get_book(file_name=name)
-    sheets = book.to_dict()
-    return sheets
+def _get_category(file_name):
+    base = os.path.basename(file_name)
+    name = os.path.splitext(base)[0]
+    return re.split(FILE_NAME_DELIMITERS, name)
+
+
+def _load_standards(file_name):
+    with codecs.open(file_name, 'rU', encoding='utf-8-sig') as file:
+        cfg = csv.reader(file, delimiter=",")
+        standards = []
+        for row in cfg:
+            standards.append(row)
+        add_size_standards(_get_category(file_name), standards)
+
+
+def load_config_files(path_name):
+    for f in os.listdir(path_name):
+        if f.endswith(".csv"):
+            file = os.path.join(path_name, f)
+            _load_standards(file)
+

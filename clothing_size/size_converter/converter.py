@@ -1,10 +1,13 @@
-from excel_loader import get_size_dictionary
-from excel_loader import parse_tags
 import size_converter_error as sc_error
+import re
+
+
+CATEGORY_DELIMITERS = '/| |;|,'
+STABDARD_NAME_DELIMITERS = '/|;|,'
 
 class Standard:
     def __init__(self, name, items):
-        self._name = parse_tags(name)
+        self._name = re.split(STABDARD_NAME_DELIMITERS, name)
         self._items = []
         for i in items:
             self._items.append(str(i))
@@ -12,6 +15,9 @@ class Standard:
     def is_match(self, name):
         for item in self._name:
             if item.lower() == name.lower():
+                return True
+            abbr = re.sub('\(.*\)' , '', item)
+            if abbr.lower() == name.lower():
                 return True
         return False
 
@@ -28,16 +34,16 @@ class Standard:
             raise sc_error.SizeConverterUnsupportedSizeIndexError(self._name, index)
 
 class Standards:
-    def __init__(self, tags, items):
-        self._tags = tags
+    def __init__(self, category, items):
+        self._category = category
         self._standards = []
         for s in items:
             name = s[0]
             std = Standard(name, s[1:])
             self._standards.append(std)
 
-    def is_match(self, tags):
-        return sorted(self._tags) == sorted(tags)
+    def is_match(self, category):
+        return sorted(self._category) == sorted(category)
 
     def get_size_index(self, standard_name, size):
         for s in self._standards:
@@ -57,19 +63,22 @@ class Standards:
 
 
 class SizeRepo:
-    def __init__(self, file_name):
-        dictionary = get_size_dictionary(file_name)
+    def __init__(self):
         self._size_repo = []
-        for category in dictionary:
-            self._size_repo.append(Standards(parse_tags(category), dictionary[category]))
-
-    def convert_size(self, tags, from_standand, to_standard, size):
+            
+    def convert_size(self, category, from_standand, to_standard, size):
         for stds in self._size_repo:
-            if stds.is_match(tags):
+            if stds.is_match(category):
                 return stds.convert_size(from_standand, to_standard, size)
-        raise sc_error.SizeConverterUnsupportedCategoryError(tags)
+        raise sc_error.SizeConverterUnsupportedCategoryError(category)
 
-repo = SizeRepo("../clothing_size.xlsx")
-def convert_size(tags, from_standand, to_standard, size):
-    return repo.convert_size(parse_tags(tags), from_standand, to_standard, size)
+    def add_standards(self, category, standard_list):
+        self._size_repo.append(Standards(category, standard_list))
 
+repo = SizeRepo()
+
+def convert_size(category, from_standand, to_standard, size):
+    return repo.convert_size(re.split(CATEGORY_DELIMITERS, category), from_standand, to_standard, size)
+
+def add_size_standards(category, standard_list):
+    return repo.add_standards(category, standard_list)
